@@ -1,0 +1,21 @@
+{
+    "name": "hq/cute",
+    "description": "a micro php framework",
+    "type": "library",
+    "require": {
+        "elasticsearch/elasticsearch": "^6.0",
+        "twig/twig": "^2.4"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "hq2005001",
+            "email": "305706352@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Cute\\": "src/"
+        }
+    }
+}
