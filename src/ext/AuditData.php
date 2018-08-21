@@ -232,7 +232,7 @@ trait AuditData
                 $value = arrayval($value);
                 break;
             case 'jsondoc':
-                $value = is_array($value) ? $value : json_decode($value, true);
+                $value = is_array($value) ? json_encode($value) : $value;
                 break;
             case 'boolean': // 转换成布尔
                 $value = boolval($value);

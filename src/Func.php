@@ -342,7 +342,111 @@ if(!function_exists('url_for')) {
         } else {
             $domain = '/';
         }
-        $url = $domain.trim($url, ' /');
+        $url = $domain.trim($url, ' /?');
         return $url;
+    }
+}
+
+
+/**
+ * 过滤出数组中某几列的值
+ *
+ * @param array $array
+ * @param $keys
+ * @return array
+ */
+if(!function_exists('array_column_filter')) {
+
+    function array_column_filter(&$array, $keys) {
+        $keys = array_flip(arrayval($keys));
+
+        if (!array_is_column($array)) {
+            $array = array_intersect_key($array, $keys);
+        } else {
+            foreach ($array as $k => $row) {
+                $array [$k] = array_intersect_key($row, $keys);
+            }
+        }
+        return $array;
+    }
+}
+
+
+/**
+ * 过滤掉数组的空值
+ * @param array $array
+ */
+if(!function_exists('array_filter_null')) {
+
+    function array_filter_null(&$array) {
+        foreach ($array as $k => $val) {
+            if (empty($val) && $val !== 0 && $val !== '0')
+                unset($array[$k]);
+        }
+        return $array;
+    }
+}
+
+
+if(!function_exists('array_column_unset')) {
+    /**
+     * 删除数组中某几列的值
+     *
+     * @param array $array 数组
+     * @param string|array $keys 列键，多个可用逗号隔开
+     * @return array
+     */
+    function array_column_unset(&$array, $keys) {
+        if (is_string($keys))
+            $keys = explode(',', $keys);
+        $keys = array_flip($keys);
+
+        if (!is_array(reset($array))) {
+            $array = array_diff_key($array, $keys);
+        } else {
+            foreach ($array as $k => $row) {
+                $array [$k] = array_diff_key($row, $keys);
+            }
+        }
+        return $array;
+    }
+}
+
+if(!function_exists('array_column_askey')) {
+    function array_column_askey(&$array, $key) {
+        $data = array();
+        foreach ($array as $row) {
+            $data [$row [$key]] = $row;
+        }
+        $array = $data;
+        return $array;
+    }
+}
+
+/**
+ * 解析url参数
+ */
+if(!function_exists('convert_url_query')) {
+    function convert_url_query($query)
+    {
+        $queryParts = explode('&', $query);
+        $params = array();
+        foreach ($queryParts as $param) {
+            $item = explode('=', $param);
+            $params[$item[0]] = $item[1];
+        }
+        return $params;
+    }
+}
+
+/**
+ * 创建目录并写入内容
+ */
+if(!function_exists('file_put_autodir')) {
+    function file_put_autodir($filename, $data, $flags=0) {
+        $pathname = dirname($filename); // 先建立目录
+        is_dir($pathname) or mkdir($pathname, 0777, true);
+        $rs = file_put_contents($filename, $data, $flags);
+        return $rs;
     }
 }

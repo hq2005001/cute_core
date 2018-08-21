@@ -26,13 +26,13 @@ trait QueryData {
      * 取数限制条数
      * @var init
      */
-    protected $limit = null;
+    protected $limit = 0;
 
     /**
      * 跳过多少条
      * @var init
      */
-    protected $skip = null;
+    protected $skip = 0;
 
     /**
      * 索引提示
@@ -49,8 +49,8 @@ trait QueryData {
         // 所有查询条件被重置
         $this->sort = null;
         $this->field = null;
-        $this->limit = null;
-        $this->skip = null;
+        $this->limit = 0;
+        $this->skip = 0;
         $this->hint = null;
         return $this;
     }
@@ -65,10 +65,11 @@ trait QueryData {
             return $this;
         if (is_string($fields))
             $fields = arrayval($fields);
-        if (isset($fields[0])) {
-            $fields = array_fill_keys($fields, 1);
-        }
-        $this->field = $fields;
+//        if (isset($fields[0])) {
+//            $fields = array_fill_keys($fields, 1);
+//        }
+
+        $this->field = implode(',', $fields);
         return $this;
     }
 

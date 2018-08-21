@@ -1,4 +1,8 @@
 <?php
+/**
+ * 用法：
+ *  php index.php Test name=hq age=12
+ */
 
 namespace Cute;
 

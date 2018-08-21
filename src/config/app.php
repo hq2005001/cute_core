@@ -6,7 +6,7 @@ return [
     'test' => Cute\Test::class,
     'config' => Cute\Config::class, //配置类
     'view' => Cute\View::class, //视图类
-    
+    'upload' => Cute\ext\UpFile::class, //文件上传类
     'server' => Cute\Server::class, //服务器类
     
     'jwt' => Cute\ext\Jwt::class, //jwt验证类

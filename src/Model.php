@@ -2,7 +2,9 @@
 
 namespace Cute;
 
-abstract class Model{
+use Cute\exceptions\DBException;
+
+abstract class Model extends Service {
 
    use ext\AuditData;
 //
@@ -127,21 +129,21 @@ abstract class Model{
     public function field($fields) {
         if (!empty($fields)) {
             if (is_array($fields) && isset($fields[0])) {
-                $this->field = array_fill_keys($fields, 1);
+                $this->field = $fields;
             } else {
                 if (!is_string($fields)) {
                     $state = reset($fields);
                 } else {
                     $state = substr($fields, 0, 1) == '-' ? 0 : 1;
                     $fields = explode(',', trim(strtr($fields, [', ' => ',', '-' => ',', '+' => ',', ' ' => ',']), ','));
-                    $fields = array_fill_keys($fields, 1);
+//                    $fields = array_fill_keys($fields, 1);
                 }
 
                 if ($state == 0) {
                     // 排除某字段， 在现有字段上排除
                     if (empty($this->field)) {
                         $this->field = array_keys($this->fields);
-                        $this->field = array_fill_keys($this->field, 1);
+//                        $this->field = array_fill_keys($this->field, 1);
                     }
                     foreach ($fields as $field => $value) {
                         unset($this->field[$field]);
@@ -219,9 +221,9 @@ abstract class Model{
      * @param bool $fuzzyCount 是否模糊统计数据
      * @return array
      */
-    public function getPaging($options = [], $fuzzyCount = true) {
+    public function getPaging($options = [], $fuzzyCount = false) {
         // 分页
-        $row = min([array_value($options, 'row', 12), $this->conf('pagingPerMaxRow', 100)]);  // 每页数据最大条数，默认100
+        $row = min([array_value($options, 'row', 12), $this->config('pagingPerMaxRow', 100)]);  // 每页数据最大条数，默认100
         $page = array_value($options, 'page', 1);
         $start = $row * ($page - 1);
         $items = $this->skip($start)->limit($row)->getAll($options);
@@ -231,7 +233,7 @@ abstract class Model{
             if (!$fuzzyCount) {
                 $count = $this->limit(0)->count();
             } else {
-                $all = array_value($options, 'all', $this->conf('pagingCountMaxRow', 101));  // 最大统计数据条数，默认101条
+                $all = array_value($options, 'all', $this->config('pagingCountMaxRow', 101));  // 最大统计数据条数，默认101条
                 $count = count($items);
                 $count = $start + $count + ($count == $row ? 1 : 0);  // 如果数据等于页数则向后一页
                 // 如果模糊页数小于预估页数，从新算总页数
@@ -253,7 +255,7 @@ abstract class Model{
      * @return array
      */
     public function getByID($id, $options = []) {
-        return $this->where(['_id' => $id])
+        return $this->where([$this->pk => $id])
                         ->getOne($options);
     }
 
@@ -265,7 +267,7 @@ abstract class Model{
      */
     public function getByIDs($ids, $options = []) {
         $ids = arrayval($ids);
-        return $this->where(count($ids) === 1 ? ['_id' => reset($ids)] : ['_id' => ['$in' => $ids]])
+        return $this->where(count($ids) === 1 ? [$this->pk => reset($ids)] : [$this->pk => ['in', $ids]])
                         ->getAll($options);
     }
 
@@ -292,9 +294,9 @@ abstract class Model{
     public function addAll() {
         $rs = 0;
         if (empty($this->data)) {
-            v\Err::add('Data cannot be empty');
+            throw new DBException('Data cannot be empty');
         } else if (!array_is_column($this->data)) {
-            v\Err::add('Data cannot be one');
+            throw new DBException('Data cannot be one');
         } else {
             if($this->genId){
                 $this->guuid($this->data);
@@ -314,9 +316,9 @@ abstract class Model{
     public function addOne() {
         $rs = 0;
         if (empty($this->data)) {
-            v\Err::add('Data cannot be empty');
+            throw new DBException('Data cannot be empty');
         } else if (isset($this->data[0])) {
-            v\Err::add('Data cannot be multi');
+            throw new DBException('Data cannot be multi');
         } else {
             if($this->genId) {
                 $this->guuid($this->data);
@@ -362,7 +364,7 @@ abstract class Model{
      * @return int
      */
     public function upByID($id) {
-        return $this->where(['_id' => $id])
+        return $this->where([$this->pk => $id])
                         ->upOne();
     }
 
@@ -375,19 +377,19 @@ abstract class Model{
     public function save() {
         $rs = 0;
         if (empty($this->data)) {
-            v\Err::add('Data cannot be empty');
+            throw new DBException('Data cannot be empty');
         } else if (array_is_column($this->data)) {
-            v\Err::add('Data cannot be multi');
+            throw new DBException('Data cannot be multi');
         } else {
-            if (empty($this->data['_id'])) {
+            if (empty($this->data[$this->pk])) {
                 // 无ID添加
                 $this->setAdd(false);
                 $rs = $this->addOne();
             } else {
                 // 有ID更新
-                $this->where(['_id' => $this->data['_id']])
+                $this->where([$this->pk => $this->data[$this->pk]])
                         ->setUp(false);
-                unset($this->data['_id']);
+                unset($this->data[$this->pk]);
                 $rs = $this->upOne();
             }
         }
@@ -424,7 +426,7 @@ abstract class Model{
      * @return int
      */
     public function delByID($id) {
-        return $this->where(['_id' => $id])
+        return $this->where([$this->pk => $id])
                         ->delOne();
     }
 
@@ -436,8 +438,8 @@ abstract class Model{
      */
     public function delByIDs($ids) {
         $ids = arrayval($ids);
-        return count($ids) === 1 ? $this->where(['_id' => reset($ids)])->delOne() :
-                $this->where(['_id' => ['$in' => $ids]])->delAll();
+        return count($ids) === 1 ? $this->where([$this->pk => reset($ids)])->delOne() :
+                $this->where([$this->pk => ['in', $ids]])->delAll();
     }
 
     /**
@@ -459,7 +461,7 @@ abstract class Model{
             if (is_null($this->lastAdd)) {
                 $this->lastAdd = [];
                 if ($id = $this->db()->lastID()) {
-                    $this->lastAdd = $this->db()->where(['_id' => $id])->findOne();
+                    $this->lastAdd = $this->db()->where([$this->pk => $id])->findOne();
                 }
             }
             return $this->lastAdd;
@@ -523,12 +525,12 @@ abstract class Model{
             if (!empty($ids)) {
                 $ids = array_values(array_unique($ids));
                 $items = $this->getByIDs($ids, ['field' => $field]);
-                $items = array_column_askey($items, '_id');
+                $items = array_column_askey($items, $this->pk);
                 // 信息合并 modelname_fieldname
                 foreach ($data as &$item) {
                     if (!empty($item[$foreignKey]) && !empty($items[$item[$foreignKey]])) {
                         foreach ($items[$item[$foreignKey]] as $f => $v) {
-                            if ($f != '_id')
+                            if ($f != $this->pk)
                                 $item["{$prefix}{$f}"] = $v;
                         }
                     }
@@ -539,7 +541,7 @@ abstract class Model{
             $item = $this->getByID($data[$foreignKey], ['field' => $field]);
             if (!empty($item)) {
                 foreach ($item as $f => $v) {
-                    if ($f != '_id')
+                    if ($f != $this->pk)
                         $data["{$prefix}{$f}"] = $v;
                 }
             }
@@ -547,7 +549,7 @@ abstract class Model{
         return $data;
     }
 
-    public function query($sql, $params)
+    public function query($sql, $params=[])
     {
         return $this->db()->queryRaw($sql, $params);
     }

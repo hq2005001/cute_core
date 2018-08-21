@@ -16,7 +16,7 @@ class View
             'debug' => true,
             'cache' => app('config')->get('view.cache_path'),
         ]);
-        $this->obj ->registerUndefinedFunctionCallback(function ($name) {
+        $this->obj->registerUndefinedFunctionCallback(function ($name) {
             if (function_exists($name)) {
                 return new \Twig_SimpleFunction($name, $name);
             }
@@ -39,5 +39,16 @@ class View
     public function render($path, $data= [])
     {
         return $this->obj->render($path, $data);
+    }
+
+    /**
+     * 渲染字段
+     */
+    public function assign($key=null, $value=null) {
+        if(is_array($key)) {
+            $this->obj->mergeGlobals($key);
+        } else {
+            $this->obj->addGlobal($key, $value);
+        }
     }
 }

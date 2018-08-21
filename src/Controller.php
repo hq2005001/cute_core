@@ -2,7 +2,7 @@
 
 namespace Cute;
 
-class Controller
+class Controller extends Service
 {
 
     protected $middlewares = [
@@ -42,14 +42,14 @@ class Controller
      * @param mixed $data 返回的数据
      * @param string $msg 返回的消息
      * @param integer $statusCode http状态码
-     * @return void
+     * @return array
      */
-    public function apiData($data, $msg = '', $statusCode = 200)
+    public function apiData($data, $msg = 'ok', $statusCode = 200)
     {
         app('res')->status($statusCode);
         return [
             'status' => $statusCode,
-            'msg' => 'ok',
+            'msg' => $msg,
             'recordset' => $data,
         ];
     }

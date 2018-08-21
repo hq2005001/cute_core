@@ -190,8 +190,12 @@ class Request
 
     public function input($key = '', $default = '')
     {
-        $value = array_value($_REQUEST, $key, $default);
-        return striptrim($value);
+        $_REQUEST = array_merge($_REQUEST,$_GET, $_POST);
+        if(!empty($key)) {
+            $value = array_value($_REQUEST, $key, $default);
+            return striptrim($value);
+        }
+        return $_REQUEST;
     }
 
     /**
@@ -301,5 +305,25 @@ class Request
             $prol = strtolower(reset($prol)) . '://';
         }
         return $prol;
+    }
+
+    /**
+     * 得到请求方式类型
+     */
+    public function method()
+    {
+        $this->method = array_value($_SERVER, 'REQUEST_METHOD', 'GET');
+        return $this->method;
+    }
+
+    /**
+     * 判断是否为指定请求类型
+     */
+    public function isMethod($method='GET')
+    {
+        if(strtoupper($method) == $this->method()) {
+            return true;
+        }
+        return false;
     }
 }

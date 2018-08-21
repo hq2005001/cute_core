@@ -44,30 +44,31 @@ class Mysql extends DB
     public function parseQuery($query)
     {
         $newQuery = [];
-        $this->params = [];
         foreach ($query as $field => $sub_condition) {
-            if (!is_array($sub_condition)) {
-                $newQuery[] = $field . '=:' . $field;
+            if(is_numeric($field)) {
+                $newQuery[] = $sub_condition;
+            } else if (!is_array($sub_condition)) {
+                $newQuery[] = "`{$field}`" . '=:' . $field;
                 $this->params[':' . $field] = $sub_condition;
             } elseif (count($sub_condition) == 2) {
                 switch (strtolower($sub_condition[0])) {
                     case 'in':
                         $newQuery[] = implode(' ', [
-                            $field,
+                            "`{$field}`",
                             $sub_condition[0],
                             '("' . implode('","', $sub_condition[1]) . '")'
                         ]);
                         break;
                     case 'between':
                         $newQuery[] = implode(' ', [
-                            $field,
+                            "`{$field}`",
                             $sub_condition[0],
                             implode(' and ', sort($sub_condition[1]))
                         ]);
                         break;
                     default:
                         $newQuery[] = implode(' ', [
-                            $field,
+                            "`{$field}`",
                             $sub_condition[0],
                             ':' . $field
                         ]);
@@ -105,11 +106,12 @@ class Mysql extends DB
      */
     public function query()
     {
+        $this->params = [];
         $sql = ['select'];
-        if (empty($this->fields)) {
-            $this->fields = '*';
+        if (empty($this->field)) {
+            $this->field = '*';
         }
-        $sql[] = $this->fields;
+        $sql[] = $this->field;
         $sql[] = 'from';
         $sql[] = '`' . $this->table . '`';
         if (!empty($this->query)) {
@@ -161,7 +163,7 @@ class Mysql extends DB
     public function next()
     {
         $item = $this->cursor->fetch();
-        return $item;
+        yield $item;
     }
 
     /**
@@ -181,7 +183,7 @@ class Mysql extends DB
      */
     public function findOne($field = '', $default = null)
     {
-        $this->limit = 1;
+//        $this->limit = 1;
         $this->query();
         $result = $this->cursor->fetch();
         if (!empty($field)) {
@@ -198,7 +200,7 @@ class Mysql extends DB
     public function count($limit = null)
     {
         $this->field(['count(1) as count']);
-        return $this->query()->findOne('count', 0);
+        return $this->limit($limit)->findOne('count', 0);
     }
 
     /**
@@ -263,6 +265,7 @@ class Mysql extends DB
         $sql[] = implode(',', $insertStr);
         $this->sql = implode(' ', $sql);
         $rs = $this->execute();
+        $this->lastID = $this->conn()->lastInsertId();
         return $rs;
     }
 
@@ -276,21 +279,21 @@ class Mysql extends DB
         $this->options($options);
         $this->params = [];
         $sql = ['update'];
-        $sql[] = $this->table;
+        $sql[] = "`{$this->table}`";
         if(empty($this->data)) {
             throw new \Cute\exceptions\DBException('更新数据不能为空');
         }
         foreach ($this->data as $key => $value) {
-            $data[] = "{$key}=:{$key}";
+            $data[] = "`{$key}`=:{$key}";
             $this->params[":{$key}"] = $value;
         }
-        $sql[] = 'set ' . implode(' and ', $data);
+        $sql[] = 'set ' . implode(' , ', $data);
         $sql[] = 'where ' . $this->parseQuery($this->query);
         if (!empty($this->limit)) {
-            $sql[] = 'limit ' . $this->sort . ',' . $this->limit;
+            $sql[] = 'limit ' . empty($this->sort) ? '': $this->sort . ',' . $this->limit;
         }
         $sql = implode(' ', $sql);
-        $rs = $this->execCmd($sql);
+        $rs = $this->execute($sql);
         return $rs;
     }
 
@@ -326,10 +329,10 @@ class Mysql extends DB
         $sql[] = $this->table;
         $sql[] = 'where ' . $this->parseQuery($this->query);
         if (!empty($this->limit)) {
-            $sql[] = 'limit ' . $this->skip . ',' . $this->limit;
+            $sql[] = 'limit ' . empty($this->skip) ? '': $this->skip . ',' . $this->limit;
         }
         $sql = implode(' ', $sql);
-        $rs = $this->execCmd($sql);
+        $rs = $this->execute($sql);
         return $rs;
     }
 

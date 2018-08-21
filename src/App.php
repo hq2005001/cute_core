@@ -89,6 +89,9 @@ class App extends Singleton
         if ($isCrontab && !empty($_SERVER['argv'][1])) {
             // crontab的参数
             $_SERVER['REQUEST_URI'] = trim($_SERVER['argv'][1], '?& ');
+            for($i=2; $i<$_SERVER['argc'];$i++) {
+                $_GET = array_merge($_GET, convert_url_query(trim($_SERVER['argv'][$i], '?& ')));
+            }
         }
         define('IS_CRONTAB', $isCrontab);
 
@@ -199,7 +202,7 @@ class App extends Singleton
     public function log($data, $file = 'default.log')
     {
         $data = date('Y-m-d H:i:s') . "\t" . (is_array($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : $data) . PHP_EOL;
-        @file_put_contents(log_path($file), $data, FILE_APPEND);
+        file_put_autodir(log_path($file), $data, FILE_APPEND);
     }
 
     /**
