@@ -13,6 +13,7 @@
             "email": "305706352@qq.com"
         }
     ],
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Cute\\": "src/"
