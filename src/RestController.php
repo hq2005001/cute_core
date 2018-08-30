@@ -248,12 +248,18 @@ class RestController extends Controller
                 // 取得成功返回的数据
                 $options = array_filter_key($params, ['field']);
                 $lastID = $model->lastID();
+                $this->afterPost($lastID, $params);
                 $data = $model->getByID($lastID, $options);
                 return $this->apiData($data);
             }
         }
         // 数据返回，API接口数据移动要return返回
         throw new ApiException('添加失败');
+    }
+
+    protected function afterPost($id, $params)
+    {
+
     }
 
     public function put()
@@ -279,6 +285,8 @@ class RestController extends Controller
             $rs1 = !$model->hasData() ? 1 : $this->upFile($data);  // 有字段变化进行文件上传处理
             $rs = $model->upByID($data['id']);
             if ($rs1 && ($rs || !$model->hasData())) {  // 如果没有修改也返回成功，文件上传出现错误则返回错误
+
+                $this->afterPut($data['id'], $params, $data);
                 // 取得成功返回的数据
                 $options = array_filter_key($params, ['field']);
                 $data = $model->getByID($data['id'], $options);
@@ -286,6 +294,11 @@ class RestController extends Controller
             }
         }
         throw new ApiException('修改失败');
+    }
+
+    protected function afterPut($id, $params, $originData)
+    {
+
     }
 
     protected function hookDeleteIds(&$id)
