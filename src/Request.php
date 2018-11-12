@@ -190,7 +190,11 @@ class Request
 
     public function input($key = '', $default = '')
     {
-        $_REQUEST = array_merge($_REQUEST,$_GET, $_POST);
+        $data = json_decode(file_get_contents('php://input'), true);
+        if(empty($data)) {
+            $data = [];
+        }
+        $_REQUEST = array_merge($_REQUEST,$_GET, $_POST, $data);
         if(!empty($key)) {
             $value = array_value($_REQUEST, $key, $default);
             return striptrim($value);

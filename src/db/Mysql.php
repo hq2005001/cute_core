@@ -44,6 +44,7 @@ class Mysql extends DB
     public function parseQuery($query)
     {
         $newQuery = [];
+        $this->params = [];
         foreach ($query as $field => $sub_condition) {
             if(is_numeric($field)) {
                 $newQuery[] = $sub_condition;
