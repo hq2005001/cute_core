@@ -41,10 +41,12 @@ class Mysql extends DB
      * @param array $query
      * @return string
      */
-    public function parseQuery($query)
+    public function parseQuery($query, $replace=false)
     {
         $newQuery = [];
-        $this->params = [];
+        if(!$replace) {
+            $this->params = [];
+        }
         foreach ($query as $field => $sub_condition) {
             if(is_numeric($field)) {
                 $newQuery[] = $sub_condition;
@@ -289,7 +291,7 @@ class Mysql extends DB
             $this->params[":{$key}"] = $value;
         }
         $sql[] = 'set ' . implode(' , ', $data);
-        $sql[] = 'where ' . $this->parseQuery($this->query);
+        $sql[] = 'where ' . $this->parseQuery($this->query, true);
         if (!empty($this->limit)) {
             $sql[] = 'limit ' . empty($this->sort) ? '': $this->sort . ',' . $this->limit;
         }
