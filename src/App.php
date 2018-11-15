@@ -89,7 +89,7 @@ class App extends Singleton
         if ($isCrontab && !empty($_SERVER['argv'][1])) {
             // crontab的参数
             $_SERVER['REQUEST_URI'] = trim($_SERVER['argv'][1], '?& ');
-            for($i=2; $i<$_SERVER['argc'];$i++) {
+            for ($i = 2; $i < $_SERVER['argc']; $i++) {
                 $_GET = array_merge($_GET, convert_url_query(trim($_SERVER['argv'][$i], '?& ')));
             }
         }
@@ -121,6 +121,25 @@ class App extends Singleton
             } else {
                 throw new exceptions\ClassNotFoundException('Class Not Found');
             }
+        }
+        return $value;
+    }
+
+    /**
+     * 创建对象
+     * @param $className
+     * @param array $args
+     * @return null
+     * @throws exceptions\ClassNotFoundException
+     */
+    public function createObj($className, $args=[])
+    {
+        $value = array_value(self::$objects, $className);
+        if (empty($value)) {
+            $value = new $className(...$args);
+            self::set($className, $value);
+        } else {
+            throw new exceptions\ClassNotFoundException('Class Not Found');
         }
         return $value;
     }
@@ -158,11 +177,12 @@ class App extends Singleton
         //把路径中的反斜线转成正斜线
         $className = str_replace('/', '\\', $className);
         $className = str_replace('\\\\', '\\', '\\app\\crontab\\' . $className);
-        if (!isset(self::$objects['crontabs']) || !array_key_exists($className, self::$objects['crontabs'])) {
-            $obj = new $className();
-            self::set('crontabs.' . $className, $obj);
-        }
-        return self::$objects['crontabs'][$className];
+//        if (!isset(self::$objects['crontabs']) || !array_key_exists($className, self::$objects['crontabs'])) {
+//            $obj = new $className();
+//            self::set('crontabs.' . $className, $obj);
+//        }
+//        return self::$objects['crontabs'][$className];
+        return new $className();
     }
 
     /**
@@ -234,12 +254,12 @@ class App extends Singleton
 
     /**
      * 索引引擎实例
-     * 
+     *
      * @param string $driver 驱动
      * @param array $confs 配置
      * @return object
      */
-    public function search($driver = 'elasticsearch', $confs=[])
+    public function search($driver = 'elasticsearch', $confs = [])
     {
         if (empty($confs)) {
             //得到指定驱动下的配置文件
@@ -248,7 +268,7 @@ class App extends Singleton
                 throw new exceptions\ConfigNotFoundException('配置文件不存在');
             }
         }
-        if(!isset(self::$objects['searchs'][$driver])) {
+        if (!isset(self::$objects['searchs'][$driver])) {
             self::$objects['searchs'][$driver] = new $confs['class_name']($confs);
         }
         return self::$objects['searchs'][$driver];

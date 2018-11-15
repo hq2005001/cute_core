@@ -13,4 +13,8 @@ return [
     
     'route' => Cute\Route::class, //路由类
     'session' => Cute\Session::class, //session类
+
+    'redis' => Cute\Redis::class, //redis类
+    'queue' => Cute\Queue::class, //队列工厂类
+
 ];
