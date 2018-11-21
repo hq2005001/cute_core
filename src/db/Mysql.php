@@ -41,10 +41,10 @@ class Mysql extends DB
      * @param array $query
      * @return string
      */
-    public function parseQuery($query, $replace=false)
+    public function parseQuery($query, $replace = true)
     {
         $newQuery = [];
-        if(!$replace) {
+        if($replace) {
             $this->params = [];
         }
         foreach ($query as $field => $sub_condition) {
@@ -286,12 +286,14 @@ class Mysql extends DB
         if(empty($this->data)) {
             throw new \Cute\exceptions\DBException('更新数据不能为空');
         }
+        $prefix = 'udpate';
         foreach ($this->data as $key => $value) {
-            $data[] = "`{$key}`=:{$key}";
-            $this->params[":{$key}"] = $value;
+            $prefix_key = $prefix.'_'.$key;
+            $data[] = "`{$key}`=:{$prefix_key}";
+            $this->params[":{$prefix_key}"] = $value;
         }
         $sql[] = 'set ' . implode(' , ', $data);
-        $sql[] = 'where ' . $this->parseQuery($this->query, true);
+        $sql[] = 'where ' . $this->parseQuery($this->query, false);
         if (!empty($this->limit)) {
             $sql[] = 'limit ' . empty($this->sort) ? '': $this->sort . ',' . $this->limit;
         }
