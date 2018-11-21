@@ -515,7 +515,8 @@ abstract class Model extends Service {
      * @return array
      */
     public function joinTo(&$data, $foreignKey, $field = null, $prefix = null) {
-        $prefix = is_null($prefix) ? strrchr(get_class($this), '\\') : $prefix;
+//        $prefix = is_null($prefix) ? strrchr(get_class($this), '\\') : $prefix;
+        $prefix = is_null($prefix) ? '': $prefix;
         if (!empty($prefix)) {
             $prefix = $prefix . '_';
         }
@@ -524,6 +525,9 @@ abstract class Model extends Service {
             $ids = array_column($data, $foreignKey);
             if (!empty($ids)) {
                 $ids = array_values(array_unique($ids));
+                if(!empty($field)) {
+                    $field = array_merge($field, [$this->pk]);
+                }
                 $items = $this->getByIDs($ids, ['field' => $field]);
                 $items = array_column_askey($items, $this->pk);
                 // 信息合并 modelname_fieldname
