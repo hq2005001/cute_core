@@ -18,6 +18,15 @@ if (!function_exists('app')) {
 }
 
 /**
+ * 得到模型实例
+ */
+if(!function_exists('model')) {
+    function model($name) {
+        return app()->model($name);
+    }
+}
+
+/**
  * 根据字符键获取多维数组中的值
  * 如array_value(array, 's.2')
  *
